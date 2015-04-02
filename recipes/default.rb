@@ -6,39 +6,40 @@
 require 'rubygems'
 
 include_recipe 'apache2'
-include_recipe 'mysql::server'
 
 if platform?('centos', 'redhat')
   include_recipe 'yum'
   include_recipe 'yum-epel'
   include_recipe 'yum-repoforge'
+else
+  node.set['apt']['compile_time_update'] = true
+  include_recipe 'apt'
 end
-
-# http://www.cryptocracy.com/blog/2014/04/29/five-things-i-hate-about-chef/
-# require mysql fails due to https://sethvargo.com/using-gems-with-chef/
 
 # Run first because of dependencies for mysql gem
-if platform?("ubuntu", "debian")
-  %w{build-essential libmysqlclient-dev libapache2-mod-php5 php5-cli php5-mysql php5-gd php5-snmp php-pear snmp graphviz php5-mcrypt php5-json subversion mysql-client rrdtool fping imagemagick whois mtr-tiny nmap ipmitool python-mysqldb}.each do |p|
-    package p do
-      action :nothing
-    end.run_action(:install)
+node['observium']['package_dependencies'].each do |p|
+  package p
 end
 
-else
-  %w{wget ruby-devel gcc rubygems php mysql mysql-devel php-mysql php-gd php-snmp php-pear net-snmp net-snmp-utils graphviz subversion rrdtool ImageMagick jwhois nmap ipmitool MySQL-python}.each do |p|
-    package p do
-      action :nothing
-    end.run_action(:install)
+if node['observium']['db']['host'] == 'localhost'
+  mysql_service 'observium' do
+    socket "/var/run/mysql-observium/mysqld.sock"
+    version '5.5'
+    initial_root_password node['mysql']['server_root_password']
+    action [:create, :start]
   end
 end
 
-r = chef_gem "mysql2" do
-  action :nothing
-end
-r.run_action(:install)
+mysql_connection_info = {
+  host: node['observium']['db']['host'],
+  username: 'root',
+  password: node['mysql']['server_root_password'],
+  :socket   => "/var/run/mysql-observium/mysqld.sock"
+}
 
-Gem.clear_paths
+mysql2_chef_gem 'default' do
+  action :install
+end
 
 if platform?('centos', 'redhat')
  # since include_recipe yum-epel runs later than .run_action()
@@ -47,24 +48,16 @@ if platform?('centos', 'redhat')
   end
 end
 
-# Ruby code in the ruby_block resource is evaluated with other resources during convergence, whereas Ruby code outside of a ruby_block resource is evaluated before other resources, as the recipe is compiled.
-mysql_database_user node['observium']['db']['user'] do
-  connection(
-    host: node['observium']['db']['host'],
-    username: 'root',
-    password: node['mysql']['server_root_password']
-  )
-  password node['observium']['db']['password']
+mysql_database node['observium']['db']['db_name'] do
+  connection mysql_connection_info
   action :create
 end
 
-mysql_database node['observium']['db']['db_name'] do
-  connection(
-    host: node['observium']['db']['host'],
-    username: 'root',
-    password: node['mysql']['server_root_password']
-  )
-  action :create
+mysql_database_user node['observium']['db']['user'] do
+  connection mysql_connection_info
+  password node['observium']['db']['password']
+  database_name node['observium']['db']['db_name']
+  action [:create, :grant]
 end
 
 ark 'observium' do

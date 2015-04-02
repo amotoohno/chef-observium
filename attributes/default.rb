@@ -6,10 +6,12 @@ when 'debian', 'ubuntu'
   default['mysql']['version'] = '5.5'
   default['apache']['user'] = 'www-data'
   default['apache']['group'] = 'www-data'
+  default['observium']['package_dependencies'] = %w{build-essential libmysqlclient-dev libapache2-mod-php5 php5-cli php5-mysql php5-gd php5-snmp php-pear snmp graphviz php5-mcrypt php5-json subversion mysql-client rrdtool fping imagemagick whois mtr-tiny nmap ipmitool python-mysqldb}
 when 'centos', 'redhat'
   default['mysql']['version'] = '5.1'
   default['apache']['user'] = 'apache'
   default['apache']['group'] = 'apache'
+  default['observium']['package_dependencies'] = %w{wget ruby-devel gcc rubygems php mysql mysql-devel php-mysql php-gd php-snmp php-pear net-snmp net-snmp-utils graphviz subversion rrdtool ImageMagick jwhois nmap ipmitool MySQL-python}
 end
 
 default['observium']['installed'] = true

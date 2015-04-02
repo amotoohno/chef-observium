@@ -2,7 +2,7 @@ source "https://api.berkshelf.com"
 
 metadata
 
-cookbook "mysql", "~> 5"
+cookbook "mysql", "~> 6.0"
 cookbook "apache2"
 cookbook "yum"
 cookbook "yum-epel"
