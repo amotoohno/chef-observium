@@ -14,7 +14,7 @@ when 'centos', 'redhat'
   default['observium']['package_dependencies'] = %w{wget ruby-devel gcc rubygems php mysql mysql-devel php-mysql php-gd php-snmp php-pear net-snmp net-snmp-utils graphviz subversion rrdtool ImageMagick jwhois nmap ipmitool MySQL-python}
 end
 
-default['observium']['installed'] = true
+default['observium']['installed'] = false
 default['observium']['install_dir'] = '/opt/observium'
 default['observium']['server_name'] = 'observium.example.com'
 default['observium']['server_aliases'] = ['observium.localhost']
@@ -31,6 +31,8 @@ default['observium']['config']['collectd_dir'] = '/var/lib/collectd/rrd/'
 default['observium']['config']['poller_threads'] = '8'
 
 default['observium']['db']['host'] = 'localhost'
+default['observium']['db']['port'] = '3306'
+default['observium']['db']['socket'] = '/run/mysqld/mysqld.sock'
 default['observium']['db']['user'] = 'observium'
 default['observium']['db']['password'] = 'observium'
 default['observium']['db']['db_name'] = 'observium'

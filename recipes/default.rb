@@ -21,21 +21,24 @@ node['observium']['package_dependencies'].each do |p|
   package p
 end
 
-if node['observium']['db']['host'] == 'localhost'
-  mysql_service 'observium' do
-    socket "/var/run/mysql-observium/mysqld.sock"
-    version '5.5'
-    initial_root_password node['mysql']['server_root_password']
-    action [:create, :start]
-  end
-end
-
 mysql_connection_info = {
   host: node['observium']['db']['host'],
   username: 'root',
   password: node['mysql']['server_root_password'],
-  :socket   => "/var/run/mysql-observium/mysqld.sock"
+  socket: node['observium']['db']['socket'],
+  port: node['observium']['db']['port']
 }
+
+if node['observium']['db']['host'] == 'localhost'
+  mysql_service 'observium' do
+    version '5.5'
+    port node['observium']['db']['port']
+    initial_root_password node['mysql']['server_root_password']
+    socket node['observium']['db']['socket']
+    action [:create, :start]
+  end
+end
+
 
 mysql2_chef_gem 'default' do
   action :install
